@@ -55,7 +55,7 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 username <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>kostasx<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres username</span>
 password <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testdb<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres password</span>
-dbname <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testdb<span class="pl-pds">"</span></span>;
+dbname <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; change this name if you already have a valuable database with that name...I think it's safe you assume you don't</span>
 
 <span class="pl-c"># create the new test database</span>
 <span class="pl-k">try</span>:
@@ -65,12 +65,12 @@ dbname <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</sp
 
 conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 cur <span class="pl-k">=</span> conn.cursor()
-cur.execute(<span class="pl-s"><span class="pl-pds">'</span>DROP DATABASE testdb;<span class="pl-pds">'</span></span>)
-cur.execute(<span class="pl-s"><span class="pl-pds">'</span>CREATE DATABASE testdb;<span class="pl-pds">'</span></span>)
+cur.execute(<span class="pl-s"><span class="pl-pds">"</span>DROP DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
+cur.execute(<span class="pl-s"><span class="pl-pds">"</span>CREATE DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
 
 <span class="pl-c"># connect to the newly created database</span>
 <span class="pl-k">try</span>:
-    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='testdb' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host='localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)
+    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='<span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host='localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)
 <span class="pl-k">except</span>:
     <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>I am unable to connect to the database<span class="pl-pds">"</span></span>
 
@@ -142,9 +142,10 @@ cur <span class="pl-k">=</span> conn.cursor()
     cur.close()
     conn.close()
 <span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Unexpected error:<span class="pl-pds">"</span></span>, sys.exc_info()[<span class="pl-c1">0</span>]</pre></div>
+    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Unexpected error:<span class="pl-pds">"</span></span>, sys.exc_info()[<span class="pl-c1">0</span>]
 
-<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> graphgenpy <span class="pl-k">import</span> GraphGenerator
+```python
+<span class="pl-k">from</span> graphgenpy <span class="pl-k">import</span> GraphGenerator
 <span class="pl-k">import</span> networkx <span class="pl-k">as</span> nx
 
 datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>...<span class="pl-pds">"</span></span>
