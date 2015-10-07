@@ -46,7 +46,7 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 <p><strong>Example:</strong></p>
 
-<p>You an use the following script to load up a toy version of the dblp dataset to play around with </p>
+<p>You an use the following script to load up a toy version of the dblp dataset to play around with. You can also download this <a href="https://drive.google.com/file/d/0B20MIwp_I7FlRGJjaUU5NWxyOVE/view?usp=sharing">script</a> in order to run it directly using python.</p>
 
 <div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> psycopg2
 <span class="pl-k">from</span> psycopg2.extensions <span class="pl-k">import</span> ISOLATION_LEVEL_AUTOCOMMIT
@@ -145,7 +145,7 @@ cur <span class="pl-k">=</span> conn.cursor()
     <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Unexpected error:<span class="pl-pds">"</span></span>, sys.exc_info()[<span class="pl-c1">0</span>]
 </pre></div>
 
-<p>After having a dataset, using <code>graphgen</code> is simple</p>
+<p>After having a dataset, using <code>graphgenpy</code> is simple</p>
 
 <div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> graphgenpy <span class="pl-k">import</span> GraphGenerator
 <span class="pl-k">import</span> networkx <span class="pl-k">as</span> nx
@@ -176,7 +176,7 @@ nx.pagerank(G)
 <ul>
 <li>Author</li>
 <li>Publication</li>
-<li>AuthorPub</li>
+<li>AuthorPublication</li>
 <li>Conference</li>
 </ul>
 
