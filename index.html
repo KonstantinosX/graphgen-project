@@ -156,10 +156,10 @@ datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds"
 gg <span class="pl-k">=</span> GraphGenerator(<span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>kostasx<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>) <span class="pl-c">#All these must be strings!!</span>
 
 <span class="pl-c"># Evaluate graph extraction query and serialize the resulting graph to disk in a standard format. Return the file's name in the FS</span>
-fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,<span class="pl-s"><span class="pl-pds">"</span>extracted_graph<span class="pl-pds">"</span></span>,GraphGenerator.GRAPHML)
+fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,<span class="pl-s"><span class="pl-pds">"</span>extracted_graph<span class="pl-pds">"</span></span>,GraphGenerator.GML)
 
 <span class="pl-c"># Load graph into NetworkX</span>
-G <span class="pl-k">=</span> nx.read_graphml(fname)
+G <span class="pl-k">=</span> nx.read_gml(fname) <span class="pl-c">#by default, the graph format will me gml</span>
 <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Graph Loaded into NetworkX! Running PageRank...<span class="pl-pds">"</span></span>
 
 <span class="pl-c"># Run any algorithm on the graph using NetowrkX</span>
