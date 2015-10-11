@@ -22,7 +22,7 @@
       <p>We are excited to make an initial beta release of GraphGen; a system
 towards enabling graph analytics on top of relational datasets. GraphGen allows users to <em>declaratively</em> specify graph extraction tasks over relational databases, visually explore the extracted graphs, and write and execute graph algorithms over them, either directly using our vertex-centric framework or using existing graph libraries like the widely used NetworkX Python library. GraphGen was demonstrated at <em>VLDB 2015</em>; For a few more details see our <a href="http://www.vldb.org/pvldb/vol8/p2032-xirogiannopoulos.pdf">demo paper</a> or view the <a href="https://youtu.be/GDVBLv-oedQ">video</a> that explains the main functionality of the demo and core research challenges in GraphGen. We also have a followup paper in the works so stay tuned!</p>
 
-<p>GraphGen currently only supports <a href="http://www.postgresql.org/">Postgres</a> as the backend relational database.</p>
+<p>GraphGen currently only supports <a href="http://www.postgresql.org/">PostgreSQL</a> as the backend relational database.</p>
 
 <h2>
 <a id="this-is-cool-but-is-it-really-necessary" class="anchor" href="#this-is-cool-but-is-it-really-necessary" aria-hidden="true"><span class="octicon octicon-link"></span></a>This is cool, but is it really necessary?</h2>
@@ -46,120 +46,19 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 <p><strong>Example:</strong></p>
 
-<p>You an use the following script to load up a toy version of the dblp dataset to play around with. You can also download this <a href="https://drive.google.com/file/d/0B20MIwp_I7FlRGJjaUU5NWxyOVE/view?usp=sharing">script</a> in order to run it directly using python.</p>
-
-<div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> psycopg2
-<span class="pl-k">from</span> psycopg2.extensions <span class="pl-k">import</span> ISOLATION_LEVEL_AUTOCOMMIT
-<span class="pl-k">import</span> pprint
-<span class="pl-k">import</span> sys
-
-username <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>kostasx<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres username</span>
-password <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testdb<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres password</span>
-dbname <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; change this name if you already have a valuable database with that name...I think it's safe you assume you don't</span>
-
-<span class="pl-c"># create the new test database</span>
-<span class="pl-k">try</span>:
-    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='postgres' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host = 'localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password)
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>I am unable to connect to Postgres.<span class="pl-pds">"</span></span>
-
-conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-cur <span class="pl-k">=</span> conn.cursor()
-cur.execute(<span class="pl-s"><span class="pl-pds">"</span>DROP DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
-cur.execute(<span class="pl-s"><span class="pl-pds">"</span>CREATE DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
-
-<span class="pl-c"># connect to the newly created database</span>
-<span class="pl-k">try</span>:
-    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='<span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host='localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>I am unable to connect to the database<span class="pl-pds">"</span></span>
-
-cur <span class="pl-k">=</span> conn.cursor()
-<span class="pl-k">try</span>:
-    authorTable <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE author (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>))<span class="pl-pds">"</span></span>
-    cur.execute(authorTable)
-
-    conference <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE conference (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>),year <span class="pl-k">integer</span>,location <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>));<span class="pl-pds">"</span></span>
-    cur.execute(conference)
-
-    pub <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE publication (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,title <span class="pl-k">character varying</span>(<span class="pl-c1">2048</span>),cid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> conference(id));<span class="pl-pds">"</span></span>
-    cur.execute(pub)
-
-    authorpub <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE authorpublication (aid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span>  <span class="pl-k">REFERENCES</span> author(id), pid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> publication(id), <span class="pl-k">PRIMARY KEY</span>(aid,pid));<span class="pl-pds">"</span></span>
-    cur.execute(authorpub)
-
-    <span class="pl-c"># # execute our Query</span>
-    authors <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span><span class="pl-k">INSERT INTO</span> author (id, name) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">'</span>Anindya Datta<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">2</span>,<span class="pl-s"><span class="pl-pds">'</span>Heiko Schuldt<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-s"><span class="pl-pds">'</span>Sandeepan Banerjee<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">4</span>,<span class="pl-s"><span class="pl-pds">'</span>Christophe Bobineau<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-s"><span class="pl-pds">'</span>Sangyong Hwang<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">6</span>,<span class="pl-s"><span class="pl-pds">'</span>Tirthankar Lahiri<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-s"><span class="pl-pds">'</span>Evangelos Eleftheriou<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Quan Z. Sheng<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">9</span>,<span class="pl-s"><span class="pl-pds">'</span>Egemen Tanin<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-s"><span class="pl-pds">'</span>Brandon Lloyd<span class="pl-pds">'</span></span>);<span class="pl-pds">"""</span></span>
-    cur.execute(authors)
-
-    conferences <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span> <span class="pl-k">INSERT INTO</span> conference (id, name,year,location) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">49</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Hangzhou, China<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">87</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Kailua Kona, HI USA<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">84</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Snowbird, Utah<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">36</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Melbourne, Australia<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">59</span>,<span class="pl-s"><span class="pl-pds">'</span>CIDR<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Asilomar, CA USA<span class="pl-pds">'</span></span>);<span class="pl-pds">"""</span></span>
-    cur.execute(conferences)
-
-    publications <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span> <span class="pl-k">INSERT INTO</span> publication (id, title,cid) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 1.<span class="pl-pds">'</span></span>,<span class="pl-c1">49</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">15</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 2.<span class="pl-pds">'</span></span>,<span class="pl-c1">87</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">25</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 3.<span class="pl-pds">'</span></span>,<span class="pl-c1">84</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">44</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 4.<span class="pl-pds">'</span></span>,<span class="pl-c1">36</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">64</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 5.<span class="pl-pds">'</span></span>,<span class="pl-c1">59</span>);</span>
-<span class="pl-s">        <span class="pl-pds">"""</span></span>
-    cur.execute(publications)
-    authorpubs <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span><span class="pl-k">INSERT INTO</span> authorpublication (aid, pid) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">2</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-c1">15</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">4</span>,<span class="pl-c1">15</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">6</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">9</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-c1">64</span>);<span class="pl-pds">"""</span></span>
-    cur.execute(authorpubs)
-
-    conn.commit();
-    cur.close()
-    conn.close()
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Unexpected error:<span class="pl-pds">"</span></span>, sys.exc_info()[<span class="pl-c1">0</span>]
-</pre></div>
-
-<p>After having a dataset, using <code>graphgenpy</code> is simple</p>
-
 <div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> graphgenpy <span class="pl-k">import</span> GraphGenerator
 <span class="pl-k">import</span> networkx <span class="pl-k">as</span> nx
 
-datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span> Nodes(ID, Name) :- Author(ID, Name). Edges(ID1, ID2) :- AuthorPublication(ID1, PubID), AuthorPublication(ID2, PubID).<span class="pl-pds">"""</span></span>
+datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>...<span class="pl-pds">"</span></span>
 
 <span class="pl-c"># Credentials for connecting to the database</span>
-gg <span class="pl-k">=</span> GraphGenerator(<span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>kostasx<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>) <span class="pl-c">#All these must be strings!!</span>
+gg <span class="pl-k">=</span> GraphGenerator(<span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>port<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>dbname<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>username<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>password<span class="pl-pds">"</span></span>)
 
 <span class="pl-c"># Evaluate graph extraction query and serialize the resulting graph to disk in a standard format. Return the file's name in the FS</span>
-fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,<span class="pl-s"><span class="pl-pds">"</span>extracted_graph<span class="pl-pds">"</span></span>,GraphGenerator.GML)
+fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,filename,GraphGenerator.GRAPHML)
 
 <span class="pl-c"># Load graph into NetworkX</span>
-G <span class="pl-k">=</span> nx.read_gml(fname) <span class="pl-c">#by default, the graph format will me gml</span>
+G <span class="pl-k">=</span> nx.read_graphml(fname)
 <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Graph Loaded into NetworkX! Running PageRank...<span class="pl-pds">"</span></span>
 
 <span class="pl-c"># Run any algorithm on the graph using NetowrkX</span>
@@ -176,7 +75,7 @@ nx.pagerank(G)
 <ul>
 <li>Author</li>
 <li>Publication</li>
-<li>AuthorPublication</li>
+<li>AuthorPub</li>
 <li>Conference</li>
 </ul>
 
@@ -326,8 +225,6 @@ p<span class="pl-k">.</span>run(program);
 
 <span class="pl-c">//Run</span>
 p<span class="pl-k">.</span>run(pagerank);</pre></div>
-
-<p>Thanks for reading and please don't hesitate to contact me with any questions: <a href="mailto:kostasx@cs.umd.edu">kostasx@cs.umd.edu</a></p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/KonstantinosX/graphgen-project">GraphGen</a> is maintained by <a href="https://github.com/KonstantinosX">KonstantinosX</a>.</span>
