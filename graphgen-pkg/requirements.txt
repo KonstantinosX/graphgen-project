@@ -1,0 +1,6 @@
+## GraphgenPy Requirements
+
+decorator==4.0.4
+networkx==1.10
+psycopg2==2.6.1
+wheel==0.24.0
