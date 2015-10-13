@@ -24,7 +24,7 @@ print "The file is located at : " + os.path.dirname(os.path.realpath(__file__)) 
 # Import graph into NetworkX by reading the serialized graph
 
 #for GML Format
-G = nx.read_gml(fname);
+G = nx.read_gml(fname,'id');
 print "Graph Loaded into NetworkX! Running PageRank..."
 nx.pagerank(G)
 print "Done!"
