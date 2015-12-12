@@ -4,7 +4,7 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 GraphGen currently only supports [PostgreSQL](http://www.postgresql.org/) as the backend relational database.
 
-# Example Workflow
+## Example Workflow
 Say you have a relational database of authors, publications and conferences (the dblp database). Such a database, if normalized would usually involve an `AuthorPublication` table for connecting authors with their publications. Say you wanted to explore a dataset like this further and ask questions like _"Who are the most influential researchers?"_ or _"Who has published with whom"_, _"Are there cliques of collaborations being formed and what are they?"_ etc. All of these questions boil down to extracting an interconnection structure ( a graph ) of these entities and running graph algorithms on top of it. Doing this using GraphGen in `python` is _effortless_. To extract a graph like this and for instance run the _PageRank_ algorithm on top of it one would simply need to write the following query:
 
 ```python
@@ -34,6 +34,19 @@ print nx.pagerank(G)
 
 That's it!
 
+## Installing `graphgenpy`
+
+To install `graphgenpy` onto your system, simply download and uncompress the `graphgen-pkg`.
+
+If you're using a virtual environment (`virtualenv`) then simply
+```bash
+python setup.py install
+```
+
+If not
+
+After that you can immediately use `graphgenpy` to extract and serialize your graphs onto disk and use them as you please.
+
 
 ## This is cool, but is it really necessary?
 Graph analytics and graph algorithms have proven their worth time and again, having provided substantial value to various different domains like social networks, communication networks, finance, health, and many others. However if the data stored for a particular application is not geared towards some network-specific task or the application itself is not network-centric, users will logically not choose to store their data in a native graph store or in a graph format separating out Nodes and Edges. These users would likely use a conventional, mature and often more reliable relational database. Nevertheless these users may still want to apply these graph analyses onto their data in order to power their application, perhaps though building a machine learning model or just trying to figure out the inner-workings of their company by exploring their inner e-mail network etc. GraphGen is therefore built towards enabling users who have gone with the latter choice to _efficiently_ conduct their desired in-memory graph analyses on the data stored in their normalized relational databases without the need to manually go through time and money consuming ETL processes with often sub-optimal results.
@@ -42,13 +55,6 @@ Through its simplicity and intuitiveness, GraphGen _opens up_ graph analytics on
 
 ## Using GraphGen with Python
 The easiest way to try out GraphGen is probably in Python through `graphgenpy`; a Python wrapper library for executing graph extraction queries in our custom DSL which is based on Datalog. The graphs that result from the extraction query are serialized to disk in a standard format and can then be _loaded_ into other graph libraries like [`NetworkX`](https://networkx.github.io/) for further analysis.
-
-###Installing graphgenpy
-
-To install `graphgenpy` onto your system, simply download the `graphgen-pkg`, and run:
-`python setup.py install` in the uncompressed directory.
-
-After that you can immediately use `graphgenpy` to extract and serialize your graphs onto disk and use them as you please.
 
 __Example:__
 
