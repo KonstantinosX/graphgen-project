@@ -24,8 +24,31 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 <p>GraphGen currently only supports <a href="http://www.postgresql.org/">PostgreSQL</a> as the backend relational database.</p>
 
-<h2>
-<a id="quickstart-example" class="anchor" href="#quickstart-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quickstart Example</h2>
+<h1>
+<a id="example-workflow" class="anchor" href="#example-workflow" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Workflow</h1>
+
+<p>Say you have a relational database of authors, publications and conferences (the dblp database). Such a database, if normalized would usually involve an <code>AuthorPublication</code> table for connecting authors with their publications. Say you wanted to explore a dataset like this further and ask questions like "Who are the most influential researchers?" or "Who has published with whom", "Are there cliques of collaborations being formed and what are they?" etc. All of these questions boil down to extracting an interconnection structure ( a graph ) of these entities and running graph algorithms on top of it. Doing this using GraphGen in <code>python</code> is <em>effortless</em>. To extract a graph like this and for instance run the <em>PageRank</em> algorithm on top of it one would simply need to write the following query:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-c"># An Edge exists between two author nodes if they've published together</span>
+datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">Nodes(ID, Name) :- Author(ID, Name).</span>
+<span class="pl-s">Edges(ID1, ID2) :- AuthorPublication(ID1, PubID), AuthorPublication(ID2, PubID).</span>
+<span class="pl-s"><span class="pl-pds">"""</span></span></pre></div>
+
+<p>GraphGen takes in the above query, evaluates it <em>efficiently</em>, serializes the graph to disk in a standardized graph format like <code>JSON</code> (<code>GraphSON</code>) and returns the file handle name to the user.</p>
+
+<div class="highlight highlight-source-python"><pre>fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,GraphGenerator.GraphSON)
+<span class="pl-c"># ...</span></pre></div>
+
+<p>The user can then simply use <code>pagerank</code> from the wide variety of graph algorithms implemented in a package like <code>networkx</code> (or essentially anything able to parse and load the graph in from the GraphSON format in this case), and execute it.</p>
+
+<div class="highlight highlight-source-python"><pre>G <span class="pl-k">=</span> nx.read_gml(fname,<span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>)
+<span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Graph Loaded into NetworkX! Running PageRank...<span class="pl-pds">"</span></span>
+
+<span class="pl-c"># Run any algorithm on the graph using NetowrkX</span>
+<span class="pl-k">print</span> nx.pagerank(G)</pre></div>
+
+<p>That's it!</p>
 
 <h2>
 <a id="this-is-cool-but-is-it-really-necessary" class="anchor" href="#this-is-cool-but-is-it-really-necessary" aria-hidden="true"><span class="octicon octicon-link"></span></a>This is cool, but is it really necessary?</h2>
@@ -52,101 +75,172 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 <p>Here is the script that loads a toy <em>dblp</em> database that will allow you to play around with <code>graphgenpy</code>.
 This script is also included in <code>graphgen-pkg.zip</code>.</p>
 
-<div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> psycopg2
-<span class="pl-k">from</span> psycopg2.extensions <span class="pl-k">import</span> ISOLATION_LEVEL_AUTOCOMMIT
-<span class="pl-k">import</span> pprint
+<div class="highlight highlight-source-python"><pre><span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">Loads an example database into PostgreSQL to show off GraphGen examples.</span>
+<span class="pl-s"><span class="pl-pds">"""</span></span>
+
+<span class="pl-c">##########################################################################</span>
+<span class="pl-c">## Imports</span>
+<span class="pl-c">##########################################################################</span>
+
 <span class="pl-k">import</span> sys
+<span class="pl-k">import</span> pprint
+<span class="pl-k">import</span> psycopg2
 
-username <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>kostasx<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres username</span>
-password <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testdb<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; postgres password</span>
-dbname <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>; <span class="pl-c">#&lt;&lt; change this name if you already have a valuable database with that name...I think it's safe you assume you don't</span>
+<span class="pl-k">from</span> psycopg2.extensions <span class="pl-k">import</span> ISOLATION_LEVEL_AUTOCOMMIT
 
-<span class="pl-c"># create the new test database</span>
-<span class="pl-k">try</span>:
-    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='postgres' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host = 'localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password)
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>I am unable to connect to Postgres.<span class="pl-pds">"</span></span>
+<span class="pl-c">##########################################################################</span>
+<span class="pl-c">## Module Fixtures</span>
+<span class="pl-c">##########################################################################</span>
 
-conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-cur <span class="pl-k">=</span> conn.cursor()
-cur.execute(<span class="pl-s"><span class="pl-pds">"</span>DROP DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
-cur.execute(<span class="pl-s"><span class="pl-pds">"</span>CREATE DATABASE <span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>;<span class="pl-pds">"</span></span>)
+USERNAME <span class="pl-k">=</span> <span class="pl-c1">None</span>  <span class="pl-c">#&lt;&lt; insert PostgreSQL username here</span>
+PASSWORD <span class="pl-k">=</span> <span class="pl-c1">None</span>  <span class="pl-c">#&lt;&lt; insert PostgreSQL password here</span>
 
-<span class="pl-c"># connect to the newly created database</span>
-<span class="pl-k">try</span>:
-    conn <span class="pl-k">=</span> psycopg2.connect(<span class="pl-s"><span class="pl-pds">"</span>dbname='<span class="pl-pds">"</span></span><span class="pl-k">+</span>dbname<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span>' user=<span class="pl-pds">"</span></span><span class="pl-k">+</span>username<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span> host='localhost' password=<span class="pl-pds">"</span></span><span class="pl-k">+</span>password<span class="pl-k">+</span><span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>I am unable to connect to the database<span class="pl-pds">"</span></span>
+<span class="pl-c"># Change the database name if you already have a database called this.</span>
+<span class="pl-c"># I think it's safe to assume you don't though ...</span>
+DBNAME   <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>testgraphgen<span class="pl-pds">"</span></span>
 
-cur <span class="pl-k">=</span> conn.cursor()
-<span class="pl-k">try</span>:
-    authorTable <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE author (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>));<span class="pl-pds">"</span></span>
-    cur.execute(authorTable)
+<span class="pl-c">##########################################################################</span>
+<span class="pl-c">## Helper Functions</span>
+<span class="pl-c">##########################################################################</span>
 
-    conference <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE conference (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>),year <span class="pl-k">integer</span>,location <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>));<span class="pl-pds">"</span></span>
-    cur.execute(conference)
+<span class="pl-k">def</span> <span class="pl-en">connect_and_create</span>(<span class="pl-smi">username</span><span class="pl-k">=</span>USERNAME, <span class="pl-smi">password</span><span class="pl-k">=</span>PASSWORD, <span class="pl-smi">dbname</span><span class="pl-k">=</span>DBNAME):
+    <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">    Connects to the database and drops the current database and creates a new one.</span>
+<span class="pl-s">    <span class="pl-pds">"""</span></span>
 
-    pub <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE publication (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,title <span class="pl-k">character varying</span>(<span class="pl-c1">2048</span>),cid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> conference(id));<span class="pl-pds">"</span></span>
-    cur.execute(pub)
+    <span class="pl-k">if</span> username <span class="pl-k">is</span> <span class="pl-c1">None</span> <span class="pl-k">or</span> password <span class="pl-k">is</span> <span class="pl-c1">None</span>:
+        <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Please edit this file with the username and password to your database!<span class="pl-pds">"</span></span>
+        sys.exit(<span class="pl-c1">1</span>)
 
-    authorpub <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE authorpublication (aid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span>  <span class="pl-k">REFERENCES</span> author(id), pid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> publication(id), <span class="pl-k">PRIMARY KEY</span>(aid,pid));<span class="pl-pds">"</span></span>
-    cur.execute(authorpub)
+    <span class="pl-c"># Create new test database</span>
+    <span class="pl-k">try</span>:
+        dsn  <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>dbname='postgres' user='<span class="pl-c1">{}</span>' host='localhost' password='<span class="pl-c1">{}</span>'<span class="pl-pds">"</span></span>
+        conn <span class="pl-k">=</span> psycopg2.connect(dsn.format(username, password))
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    <span class="pl-k">except</span>:
+        <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Can't connect to PostgreSQL using the following DSN:<span class="pl-cce">\n</span>    <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(<span class="pl-c1">repr</span>(dsn))
+        sys.exit(<span class="pl-c1">1</span>)
 
-    <span class="pl-c"># # execute our Query</span>
-    authors <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span><span class="pl-k">INSERT INTO</span> author (id, name) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">'</span>Anindya Datta<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">2</span>,<span class="pl-s"><span class="pl-pds">'</span>Heiko Schuldt<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-s"><span class="pl-pds">'</span>Sandeepan Banerjee<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">4</span>,<span class="pl-s"><span class="pl-pds">'</span>Christophe Bobineau<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-s"><span class="pl-pds">'</span>Sangyong Hwang<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">6</span>,<span class="pl-s"><span class="pl-pds">'</span>Tirthankar Lahiri<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-s"><span class="pl-pds">'</span>Evangelos Eleftheriou<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Quan Z. Sheng<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">9</span>,<span class="pl-s"><span class="pl-pds">'</span>Egemen Tanin<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-s"><span class="pl-pds">'</span>Brandon Lloyd<span class="pl-pds">'</span></span>);<span class="pl-pds">"""</span></span>
-    cur.execute(authors)
+    cursor <span class="pl-k">=</span> conn.cursor()
+    cursor.execute(<span class="pl-s"><span class="pl-pds">"</span>DROP DATABASE IF EXISTS <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(dbname))
+    cursor.execute(<span class="pl-s"><span class="pl-pds">"</span>CREATE DATABASE <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(dbname))
 
-    conferences <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span> <span class="pl-k">INSERT INTO</span> conference (id, name,year,location) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">49</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Hangzhou, China<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">87</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Kailua Kona, HI USA<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">84</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Snowbird, Utah<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">36</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Melbourne, Australia<span class="pl-pds">'</span></span>),</span>
-<span class="pl-s">        (<span class="pl-c1">59</span>,<span class="pl-s"><span class="pl-pds">'</span>CIDR<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Asilomar, CA USA<span class="pl-pds">'</span></span>);<span class="pl-pds">"""</span></span>
-    cur.execute(conferences)
+    <span class="pl-c"># Connect to the new database and return the connection</span>
+    <span class="pl-k">try</span>:
+        dsn  <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>dbname='<span class="pl-c1">{}</span>' user='<span class="pl-c1">{}</span>' host='localhost' password='<span class="pl-c1">{}</span>'<span class="pl-pds">"</span></span>
+        conn <span class="pl-k">=</span> psycopg2.connect(dsn.format(dbname, username, password))
+        <span class="pl-k">return</span> conn
+    <span class="pl-k">except</span>:
+        <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Can't connect to PostgreSQL using the following DSN:<span class="pl-cce">\n</span>    <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(<span class="pl-c1">repr</span>(dsn))
+        sys.exit(<span class="pl-c1">1</span>)
 
-    publications <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span> <span class="pl-k">INSERT INTO</span> publication (id, title,cid) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 1.<span class="pl-pds">'</span></span>,<span class="pl-c1">49</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">15</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 2.<span class="pl-pds">'</span></span>,<span class="pl-c1">87</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">25</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 3.<span class="pl-pds">'</span></span>,<span class="pl-c1">84</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">44</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 4.<span class="pl-pds">'</span></span>,<span class="pl-c1">36</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">64</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 5.<span class="pl-pds">'</span></span>,<span class="pl-c1">59</span>);</span>
-<span class="pl-s">        <span class="pl-pds">"""</span></span>
-    cur.execute(publications)
-    authorpubs <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span><span class="pl-k">INSERT INTO</span> authorpublication (aid, pid) <span class="pl-k">VALUES</span></span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">1</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">2</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-c1">15</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">4</span>,<span class="pl-c1">15</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">5</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">6</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-c1">25</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">7</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">8</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">9</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">64</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">44</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">10</span>,<span class="pl-c1">8</span>),</span>
-<span class="pl-s">        (<span class="pl-c1">3</span>,<span class="pl-c1">64</span>);<span class="pl-pds">"""</span></span>
-    cur.execute(authorpubs)
 
-    conn.commit();
-    cur.close()
+<span class="pl-k">def</span> <span class="pl-en">create_tables</span>(<span class="pl-smi">conn</span>):
+    <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">    Using a passed in connection, creates the tables in the DB.</span>
+<span class="pl-s">    <span class="pl-pds">"""</span></span>
+    cursor <span class="pl-k">=</span> conn.cursor()
+    stmts  <span class="pl-k">=</span> (
+        <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE author (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>));<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE conference (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,name <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>),year <span class="pl-k">integer</span>,location <span class="pl-k">character varying</span>(<span class="pl-c1">1024</span>));<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE publication (id <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">PRIMARY KEY</span>,title <span class="pl-k">character varying</span>(<span class="pl-c1">2048</span>),cid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> conference(id));<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>CREATE TABLE authorpublication (aid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span>  <span class="pl-k">REFERENCES</span> author(id), pid <span class="pl-k">integer</span> <span class="pl-k">NOT NULL</span> <span class="pl-k">REFERENCES</span> publication(id), <span class="pl-k">PRIMARY KEY</span>(aid,pid));<span class="pl-pds">"</span></span>,
+    )
+
+    <span class="pl-k">for</span> stmt <span class="pl-k">in</span> stmts:
+        <span class="pl-k">try</span>:
+            cursor.execute(stmt)
+        <span class="pl-k">except</span> <span class="pl-c1">Exception</span> <span class="pl-k">as</span> e:
+            <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Problem creating database table with the folowing SQL:<span class="pl-pds">"</span></span>
+            <span class="pl-k">print</span> stmt
+            <span class="pl-k">print</span> e
+            sys.exit(<span class="pl-c1">2</span>)
+
+<span class="pl-k">def</span> <span class="pl-en">insert_data</span>(<span class="pl-smi">conn</span>):
+    <span class="pl-s"><span class="pl-pds">"""</span></span>
+<span class="pl-s">    Inserts data into the tables that were created using the create tables statement.</span>
+<span class="pl-s">    <span class="pl-pds">"""</span></span>
+
+    <span class="pl-c"># Data Structures</span>
+    database <span class="pl-k">=</span> (
+        (<span class="pl-s"><span class="pl-pds">'</span>authors<span class="pl-pds">'</span></span>, {
+            <span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>: (
+                (<span class="pl-c1">1</span>,<span class="pl-s"><span class="pl-pds">'</span>Anindya Datta<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">2</span>,<span class="pl-s"><span class="pl-pds">'</span>Heiko Schuldt<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">3</span>,<span class="pl-s"><span class="pl-pds">'</span>Sandeepan Banerjee<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">4</span>,<span class="pl-s"><span class="pl-pds">'</span>Christophe Bobineau<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">5</span>,<span class="pl-s"><span class="pl-pds">'</span>Sangyong Hwang<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">6</span>,<span class="pl-s"><span class="pl-pds">'</span>Tirthankar Lahiri<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">7</span>,<span class="pl-s"><span class="pl-pds">'</span>Evangelos Eleftheriou<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Quan Z. Sheng<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">9</span>,<span class="pl-s"><span class="pl-pds">'</span>Egemen Tanin<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">10</span>,<span class="pl-s"><span class="pl-pds">'</span>Brandon Lloyd<span class="pl-pds">'</span></span>),
+            ),
+            <span class="pl-s"><span class="pl-pds">'</span>sql<span class="pl-pds">'</span></span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-k">INSERT INTO</span> author (id, name) <span class="pl-k">VALUES</span> (<span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>);<span class="pl-pds">"</span></span>,
+        }),
+        (<span class="pl-s"><span class="pl-pds">'</span>conferences<span class="pl-pds">'</span></span>, {
+            <span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>: (
+                (<span class="pl-c1">49</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Hangzhou, China<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">87</span>,<span class="pl-s"><span class="pl-pds">'</span>VLDB<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Kailua Kona, HI USA<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">84</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2014</span>,<span class="pl-s"><span class="pl-pds">'</span>Snowbird, Utah<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">36</span>,<span class="pl-s"><span class="pl-pds">'</span>SIGMOD<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Melbourne, Australia<span class="pl-pds">'</span></span>),
+                (<span class="pl-c1">59</span>,<span class="pl-s"><span class="pl-pds">'</span>CIDR<span class="pl-pds">'</span></span>,<span class="pl-c1">2015</span>,<span class="pl-s"><span class="pl-pds">'</span>Asilomar, CA USA<span class="pl-pds">'</span></span>),
+            ),
+            <span class="pl-s"><span class="pl-pds">'</span>sql<span class="pl-pds">'</span></span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-k">INSERT INTO</span> conference (id, name, year, location) <span class="pl-k">VALUES</span> (<span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>);<span class="pl-pds">"</span></span>,
+        }),
+        (<span class="pl-s"><span class="pl-pds">'</span>publications<span class="pl-pds">'</span></span>, {
+            <span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>: (
+                (<span class="pl-c1">8</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 1.<span class="pl-pds">'</span></span>,<span class="pl-c1">49</span>),
+                (<span class="pl-c1">15</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 2.<span class="pl-pds">'</span></span>,<span class="pl-c1">87</span>),
+                (<span class="pl-c1">25</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 3.<span class="pl-pds">'</span></span>,<span class="pl-c1">84</span>),
+                (<span class="pl-c1">44</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 4.<span class="pl-pds">'</span></span>,<span class="pl-c1">36</span>),
+                (<span class="pl-c1">64</span>,<span class="pl-s"><span class="pl-pds">'</span>Title 5.<span class="pl-pds">'</span></span>,<span class="pl-c1">59</span>),
+            ),
+            <span class="pl-s"><span class="pl-pds">'</span>sql<span class="pl-pds">'</span></span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-k">INSERT INTO</span> publication (id, title, cid) <span class="pl-k">VALUES</span> (<span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>);<span class="pl-pds">"</span></span>,
+        }),
+        (<span class="pl-s"><span class="pl-pds">'</span>authorpubs<span class="pl-pds">'</span></span>, {
+            <span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>: (
+                (<span class="pl-c1">1</span>,<span class="pl-c1">8</span>),
+                (<span class="pl-c1">1</span>,<span class="pl-c1">64</span>),
+                (<span class="pl-c1">1</span>,<span class="pl-c1">44</span>),
+                (<span class="pl-c1">2</span>,<span class="pl-c1">8</span>),
+                (<span class="pl-c1">3</span>,<span class="pl-c1">15</span>),
+                (<span class="pl-c1">4</span>,<span class="pl-c1">15</span>),
+                (<span class="pl-c1">5</span>,<span class="pl-c1">25</span>),
+                (<span class="pl-c1">5</span>,<span class="pl-c1">44</span>),
+                (<span class="pl-c1">6</span>,<span class="pl-c1">25</span>),
+                (<span class="pl-c1">7</span>,<span class="pl-c1">25</span>),
+                (<span class="pl-c1">7</span>,<span class="pl-c1">8</span>),
+                (<span class="pl-c1">8</span>,<span class="pl-c1">44</span>),
+                (<span class="pl-c1">9</span>,<span class="pl-c1">64</span>),
+                (<span class="pl-c1">10</span>,<span class="pl-c1">64</span>),
+                (<span class="pl-c1">10</span>,<span class="pl-c1">44</span>),
+                (<span class="pl-c1">10</span>,<span class="pl-c1">8</span>),
+                (<span class="pl-c1">3</span>,<span class="pl-c1">64</span>),
+            ),
+            <span class="pl-s"><span class="pl-pds">'</span>sql<span class="pl-pds">'</span></span>: <span class="pl-s"><span class="pl-pds">"</span><span class="pl-k">INSERT INTO</span> authorpublication (aid, pid) <span class="pl-k">VALUES</span> (<span class="pl-c1">%s</span>, <span class="pl-c1">%s</span>);<span class="pl-pds">"</span></span>,
+        }),
+    )
+
+    cursor <span class="pl-k">=</span> conn.cursor()
+    <span class="pl-k">for</span> table, meta <span class="pl-k">in</span> database:
+        <span class="pl-k">try</span>:
+            cursor.executemany(meta[<span class="pl-s"><span class="pl-pds">'</span>sql<span class="pl-pds">'</span></span>], meta[<span class="pl-s"><span class="pl-pds">'</span>data<span class="pl-pds">'</span></span>])
+        <span class="pl-k">except</span> <span class="pl-c1">Exception</span> <span class="pl-k">as</span> e:
+            <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Problem inserting data into <span class="pl-c1">{}</span>:<span class="pl-pds">"</span></span>.format(table)
+            <span class="pl-k">print</span> e
+
+    conn.commit()
+    cursor.close()
+
+<span class="pl-k">if</span> <span class="pl-c1">__name__</span> <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>__main__<span class="pl-pds">'</span></span>:
+    conn <span class="pl-k">=</span> connect_and_create()
+    create_tables(conn)
+    insert_data(conn)
     conn.close()
-<span class="pl-k">except</span>:
-    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Unexpected error:<span class="pl-pds">"</span></span>, sys.exc_info()[<span class="pl-c1">0</span>]</pre></div>
+
+    <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Successfully created the test database called <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(<span class="pl-c1">repr</span>(DBNAME))</pre></div>
 
 <p>After that, <code>graphgenpy</code> is very simple to use</p>
 
