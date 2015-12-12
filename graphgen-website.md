@@ -4,6 +4,37 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 GraphGen currently only supports [PostgreSQL](http://www.postgresql.org/) as the backend relational database.
 
+# Example Workflow
+Say you have a relational database of authors, publications and conferences (the dblp database). Such a database, if normalized would usually involve an `AuthorPublication` table for connecting authors with their publications. Say you wanted to explore a dataset like this further and ask questions like _"Who are the most influential researchers?"_ or _"Who has published with whom"_, _"Are there cliques of collaborations being formed and what are they?"_ etc. All of these questions boil down to extracting an interconnection structure ( a graph ) of these entities and running graph algorithms on top of it. Doing this using GraphGen in `python` is _effortless_. To extract a graph like this and for instance run the _PageRank_ algorithm on top of it one would simply need to write the following query:
+
+```python
+# An Edge exists between two author nodes if they've published together
+datalogQuery = """
+Nodes(ID, Name) :- Author(ID, Name).
+Edges(ID1, ID2) :- AuthorPublication(ID1, PubID), AuthorPublication(ID2, PubID).
+"""
+```
+
+GraphGen takes in the above query, evaluates it _efficiently_, serializes the graph to disk in a standardized graph format like `JSON` (`GraphSON`) and returns the file handle name to the user.
+
+```python
+fname = gg.generateGraph(datalogQuery,GraphGenerator.GraphSON)
+# ...
+```
+
+The user can then simply use `pagerank` from the wide variety of graph algorithms implemented in a package like `networkx` (or essentially anything able to parse and load the graph in from the GraphSON format in this case), and execute it.
+
+```python
+G = nx.read_gml(fname,'id')
+print "Graph Loaded into NetworkX! Running PageRank..."
+
+# Run any algorithm on the graph using NetowrkX
+print nx.pagerank(G)
+```
+
+That's it!
+
+
 ## This is cool, but is it really necessary?
 Graph analytics and graph algorithms have proven their worth time and again, having provided substantial value to various different domains like social networks, communication networks, finance, health, and many others. However if the data stored for a particular application is not geared towards some network-specific task or the application itself is not network-centric, users will logically not choose to store their data in a native graph store or in a graph format separating out Nodes and Edges. These users would likely use a conventional, mature and often more reliable relational database. Nevertheless these users may still want to apply these graph analyses onto their data in order to power their application, perhaps though building a machine learning model or just trying to figure out the inner-workings of their company by exploring their inner e-mail network etc. GraphGen is therefore built towards enabling users who have gone with the latter choice to _efficiently_ conduct their desired in-memory graph analyses on the data stored in their normalized relational databases without the need to manually go through time and money consuming ETL processes with often sub-optimal results.
 
@@ -25,101 +56,172 @@ Here is the script that loads a toy _dblp_ database that will allow you to play 
 This script is also included in `graphgen-pkg.zip`.
 
 ```python
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import pprint
+"""
+Loads an example database into PostgreSQL to show off GraphGen examples.
+"""
+
+##########################################################################
+## Imports
+##########################################################################
+
 import sys
+import pprint
+import psycopg2
 
-username = "kostasx"; #<< postgres username
-password = "testdb"; #<< postgres password
-dbname = "testgraphgen"; #<< change this name if you already have a valuable database with that name...I think it's safe you assume you don't
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-# create the new test database
-try:
-    conn = psycopg2.connect("dbname='postgres' user="+username+" host = 'localhost' password="+password)
-except:
-    print "I am unable to connect to Postgres."
+##########################################################################
+## Module Fixtures
+##########################################################################
 
-conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-cur = conn.cursor()
-cur.execute("DROP DATABASE "+dbname+";")
-cur.execute("CREATE DATABASE "+dbname+";")
+USERNAME = None  #<< insert PostgreSQL username here
+PASSWORD = None  #<< insert PostgreSQL password here
 
-# connect to the newly created database
-try:
-    conn = psycopg2.connect("dbname='"+dbname+"' user="+username+" host='localhost' password="+password+"")
-except:
-    print "I am unable to connect to the database"
+# Change the database name if you already have a database called this.
+# I think it's safe to assume you don't though ...
+DBNAME   = "testgraphgen"
 
-cur = conn.cursor()
-try:
-    authorTable = "CREATE TABLE author (id integer NOT NULL PRIMARY KEY,name character varying(1024));"
-    cur.execute(authorTable)
+##########################################################################
+## Helper Functions
+##########################################################################
 
-    conference = "CREATE TABLE conference (id integer NOT NULL PRIMARY KEY,name character varying(1024),year integer,location character varying(1024));"
-    cur.execute(conference)
+def connect_and_create(username=USERNAME, password=PASSWORD, dbname=DBNAME):
+    """
+    Connects to the database and drops the current database and creates a new one.
+    """
 
-    pub = "CREATE TABLE publication (id integer NOT NULL PRIMARY KEY,title character varying(2048),cid integer NOT NULL REFERENCES conference(id));"
-    cur.execute(pub)
+    if username is None or password is None:
+        print "Please edit this file with the username and password to your database!"
+        sys.exit(1)
 
-    authorpub = "CREATE TABLE authorpublication (aid integer NOT NULL  REFERENCES author(id), pid integer NOT NULL REFERENCES publication(id), PRIMARY KEY(aid,pid));"
-    cur.execute(authorpub)
+    # Create new test database
+    try:
+        dsn  = "dbname='postgres' user='{}' host='localhost' password='{}'"
+        conn = psycopg2.connect(dsn.format(username, password))
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    except:
+        print "Can't connect to PostgreSQL using the following DSN:\n    {}".format(repr(dsn))
+        sys.exit(1)
 
-    # # execute our Query
-    authors = """INSERT INTO author (id, name) VALUES
-        (1,'Anindya Datta'),
-        (2,'Heiko Schuldt'),
-        (3,'Sandeepan Banerjee'),
-        (4,'Christophe Bobineau'),
-        (5,'Sangyong Hwang'),
-        (6,'Tirthankar Lahiri'),
-        (7,'Evangelos Eleftheriou'),
-        (8,'Quan Z. Sheng'),
-        (9,'Egemen Tanin'),
-        (10,'Brandon Lloyd');"""
-    cur.execute(authors)
+    cursor = conn.cursor()
+    cursor.execute("DROP DATABASE IF EXISTS {}".format(dbname))
+    cursor.execute("CREATE DATABASE {}".format(dbname))
 
-    conferences = """ INSERT INTO conference (id, name,year,location) VALUES
-        (49,'VLDB',2014,'Hangzhou, China'),
-        (87,'VLDB',2015,'Kailua Kona, HI USA'),
-        (84,'SIGMOD',2014,'Snowbird, Utah'),
-        (36,'SIGMOD',2015,'Melbourne, Australia'),
-        (59,'CIDR',2015,'Asilomar, CA USA');"""
-    cur.execute(conferences)
+    # Connect to the new database and return the connection
+    try:
+        dsn  = "dbname='{}' user='{}' host='localhost' password='{}'"
+        conn = psycopg2.connect(dsn.format(dbname, username, password))
+        return conn
+    except:
+        print "Can't connect to PostgreSQL using the following DSN:\n    {}".format(repr(dsn))
+        sys.exit(1)
 
-    publications = """ INSERT INTO publication (id, title,cid) VALUES
-        (8,'Title 1.',49),
-        (15,'Title 2.',87),
-        (25,'Title 3.',84),
-        (44,'Title 4.',36),
-        (64,'Title 5.',59);
-        """
-    cur.execute(publications)
-    authorpubs = """INSERT INTO authorpublication (aid, pid) VALUES
-        (1,8),
-        (1,64),
-        (1,44),
-        (2,8),
-        (3,15),
-        (4,15),
-        (5,25),
-        (5,44),
-        (6,25),
-        (7,25),
-        (7,8),
-        (8,44),
-        (9,64),
-        (10,64),
-        (10,44),
-        (10,8),
-        (3,64);"""
-    cur.execute(authorpubs)
 
-    conn.commit();
-    cur.close()
+def create_tables(conn):
+    """
+    Using a passed in connection, creates the tables in the DB.
+    """
+    cursor = conn.cursor()
+    stmts  = (
+        "CREATE TABLE author (id integer NOT NULL PRIMARY KEY,name character varying(1024));",
+        "CREATE TABLE conference (id integer NOT NULL PRIMARY KEY,name character varying(1024),year integer,location character varying(1024));",
+        "CREATE TABLE publication (id integer NOT NULL PRIMARY KEY,title character varying(2048),cid integer NOT NULL REFERENCES conference(id));",
+        "CREATE TABLE authorpublication (aid integer NOT NULL  REFERENCES author(id), pid integer NOT NULL REFERENCES publication(id), PRIMARY KEY(aid,pid));",
+    )
+
+    for stmt in stmts:
+        try:
+            cursor.execute(stmt)
+        except Exception as e:
+            print "Problem creating database table with the folowing SQL:"
+            print stmt
+            print e
+            sys.exit(2)
+
+def insert_data(conn):
+    """
+    Inserts data into the tables that were created using the create tables statement.
+    """
+
+    # Data Structures
+    database = (
+        ('authors', {
+            'data': (
+                (1,'Anindya Datta'),
+                (2,'Heiko Schuldt'),
+                (3,'Sandeepan Banerjee'),
+                (4,'Christophe Bobineau'),
+                (5,'Sangyong Hwang'),
+                (6,'Tirthankar Lahiri'),
+                (7,'Evangelos Eleftheriou'),
+                (8,'Quan Z. Sheng'),
+                (9,'Egemen Tanin'),
+                (10,'Brandon Lloyd'),
+            ),
+            'sql': "INSERT INTO author (id, name) VALUES (%s, %s);",
+        }),
+        ('conferences', {
+            'data': (
+                (49,'VLDB',2014,'Hangzhou, China'),
+                (87,'VLDB',2015,'Kailua Kona, HI USA'),
+                (84,'SIGMOD',2014,'Snowbird, Utah'),
+                (36,'SIGMOD',2015,'Melbourne, Australia'),
+                (59,'CIDR',2015,'Asilomar, CA USA'),
+            ),
+            'sql': "INSERT INTO conference (id, name, year, location) VALUES (%s, %s, %s, %s);",
+        }),
+        ('publications', {
+            'data': (
+                (8,'Title 1.',49),
+                (15,'Title 2.',87),
+                (25,'Title 3.',84),
+                (44,'Title 4.',36),
+                (64,'Title 5.',59),
+            ),
+            'sql': "INSERT INTO publication (id, title, cid) VALUES (%s, %s, %s);",
+        }),
+        ('authorpubs', {
+            'data': (
+                (1,8),
+                (1,64),
+                (1,44),
+                (2,8),
+                (3,15),
+                (4,15),
+                (5,25),
+                (5,44),
+                (6,25),
+                (7,25),
+                (7,8),
+                (8,44),
+                (9,64),
+                (10,64),
+                (10,44),
+                (10,8),
+                (3,64),
+            ),
+            'sql': "INSERT INTO authorpublication (aid, pid) VALUES (%s, %s);",
+        }),
+    )
+
+    cursor = conn.cursor()
+    for table, meta in database:
+        try:
+            cursor.executemany(meta['sql'], meta['data'])
+        except Exception as e:
+            print "Problem inserting data into {}:".format(table)
+            print e
+
+    conn.commit()
+    cursor.close()
+
+if __name__ == '__main__':
+    conn = connect_and_create()
+    create_tables(conn)
+    insert_data(conn)
     conn.close()
-except:
-    print "Unexpected error:", sys.exc_info()[0]
+
+    print "Successfully created the test database called {}".format(repr(DBNAME))
 ```
 
 After that, `graphgenpy` is very simple to use
