@@ -38,22 +38,26 @@ That's it!
 
 To install `graphgenpy` onto your system, simply download and uncompress the `graphgen-pkg`.
 
-If you're using a virtual environment (`virtualenv`) then you can simply
+If you're using a virtual environment (`virtualenv`) -- which we highly recommend -- then you can simply
 
 ```bash
 python setup.py install
 ```
 
-If you'd like to install `graphgenpy` to your system you need to
+If you'd like to install `graphgenpy` onto your system you need to
 
 ```bash
 sudo python setup.py install
 ```
 
-In order to run `graphgenpy` in your local workspace, simply stay within the
+In order to try out `graphgenpy` in your local workspace without having to install it simply install the requirements using `pip`
+```bash
+pip install -r requirements.txt
+```
+and then stay within the `test-graphgenpy` directory. All the examples are included inside that directory.
+
 
 After that you can immediately use `graphgenpy` to extract and serialize your graphs onto disk and use them as you please.
-
 
 ## This is cool, but is it really necessary?
 Graph analytics and graph algorithms have proven their worth time and again, having provided substantial value to various different domains like social networks, communication networks, finance, health, and many others. However if the data stored for a particular application is not geared towards some network-specific task or the application itself is not network-centric, users will logically not choose to store their data in a native graph store or in a graph format separating out Nodes and Edges. These users would likely use a conventional, mature and often more reliable relational database. Nevertheless these users may still want to apply these graph analyses onto their data in order to power their application, perhaps though building a machine learning model or just trying to figure out the inner-workings of their company by exploring their inner e-mail network etc. GraphGen is therefore built towards enabling users who have gone with the latter choice to _efficiently_ conduct their desired in-memory graph analyses on the data stored in their normalized relational databases without the need to manually go through time and money consuming ETL processes with often sub-optimal results.
