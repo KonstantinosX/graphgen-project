@@ -25,6 +25,9 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 <p>GraphGen currently only supports <a href="http://www.postgresql.org/">PostgreSQL</a> as the backend relational database.</p>
 
 <h2>
+<a id="quickstart-example" class="anchor" href="#quickstart-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quickstart Example</h2>
+
+<h2>
 <a id="this-is-cool-but-is-it-really-necessary" class="anchor" href="#this-is-cool-but-is-it-really-necessary" aria-hidden="true"><span class="octicon octicon-link"></span></a>This is cool, but is it really necessary?</h2>
 
 <p>Graph analytics and graph algorithms have proven their worth time and again, having provided substantial value to various different domains like social networks, communication networks, finance, health, and many others. However if the data stored for a particular application is not geared towards some network-specific task or the application itself is not network-centric, users will logically not choose to store their data in a native graph store or in a graph format separating out Nodes and Edges. These users would likely use a conventional, mature and often more reliable relational database. Nevertheless these users may still want to apply these graph analyses onto their data in order to power their application, perhaps though building a machine learning model or just trying to figure out the inner-workings of their company by exploring their inner e-mail network etc. GraphGen is therefore built towards enabling users who have gone with the latter choice to <em>efficiently</em> conduct their desired in-memory graph analyses on the data stored in their normalized relational databases without the need to manually go through time and money consuming ETL processes with often sub-optimal results.</p>
