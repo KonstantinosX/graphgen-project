@@ -38,12 +38,19 @@ That's it!
 
 To install `graphgenpy` onto your system, simply download and uncompress the `graphgen-pkg`.
 
-If you're using a virtual environment (`virtualenv`) then simply
+If you're using a virtual environment (`virtualenv`) then you can simply
+
 ```bash
 python setup.py install
 ```
 
-If not
+If you'd like to install `graphgenpy` to your system you need to
+
+```bash
+sudo python setup.py install
+```
+
+In order to run `graphgenpy` in your local workspace, simply stay within the
 
 After that you can immediately use `graphgenpy` to extract and serialize your graphs onto disk and use them as you please.
 
