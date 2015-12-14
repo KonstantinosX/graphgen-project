@@ -50,11 +50,15 @@ If you'd like to install `graphgenpy` onto your system you need to
 sudo python setup.py install
 ```
 
-In order to try out `graphgenpy` in your local workspace without having to install it simply install the requirements using `pip`
+In order to try out `graphgenpy` in your local workspace without having to install it simply first install the requirements using `pip`
 ```bash
 pip install -r requirements.txt
 ```
-and then stay within the `test-graphgenpy` directory. All the examples are included inside that directory.
+and then include the graphgenpy folder in your local workspace into your python path
+
+```bash
+export 
+```
 
 
 After that you can immediately use `graphgenpy` to extract and serialize your graphs onto disk and use them as you please.
