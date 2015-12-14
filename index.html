@@ -40,7 +40,7 @@ datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds"
 <div class="highlight highlight-source-python"><pre>fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,GraphGenerator.GraphSON)
 <span class="pl-c"># ...</span></pre></div>
 
-<p>The user can then simply use <code>pagerank</code> from the wide variety of graph algorithms implemented in a package like <code>networkx</code> (or essentially anything able to parse and load the graph in from the GraphSON format in this case), and execute it.</p>
+<p>The user can then simply execute <code>pagerank</code> using their python package of choice, provided it is able to load the graph in from a file in one of the supported standard formats. Here we demonstrate using <code>NetowrkX</code>.</p>
 
 <div class="highlight highlight-source-python"><pre>G <span class="pl-k">=</span> nx.read_gml(fname,<span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>)
 <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Graph Loaded into NetworkX! Running PageRank...<span class="pl-pds">"</span></span>
