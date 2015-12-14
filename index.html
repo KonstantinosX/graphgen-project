@@ -24,10 +24,10 @@ towards enabling graph analytics on top of relational datasets. GraphGen allows 
 
 <p>GraphGen currently only supports <a href="http://www.postgresql.org/">PostgreSQL</a> as the backend relational database.</p>
 
-<h1>
-<a id="example-workflow" class="anchor" href="#example-workflow" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Workflow</h1>
+<h2>
+<a id="example-workflow" class="anchor" href="#example-workflow" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example Workflow</h2>
 
-<p>Say you have a relational database of authors, publications and conferences (the dblp database). Such a database, if normalized would usually involve an <code>AuthorPublication</code> table for connecting authors with their publications. Say you wanted to explore a dataset like this further and ask questions like "Who are the most influential researchers?" or "Who has published with whom", "Are there cliques of collaborations being formed and what are they?" etc. All of these questions boil down to extracting an interconnection structure ( a graph ) of these entities and running graph algorithms on top of it. Doing this using GraphGen in <code>python</code> is <em>effortless</em>. To extract a graph like this and for instance run the <em>PageRank</em> algorithm on top of it one would simply need to write the following query:</p>
+<p>Say you have a relational database of authors, publications and conferences (the dblp database). Such a database, if normalized would usually involve an <code>AuthorPublication</code> table for connecting authors with their publications. Say you wanted to explore a dataset like this further and ask questions like <em>"Who are the most influential researchers?"</em> or <em>"Who has published with whom"</em>, <em>"Are there cliques of collaborations being formed and what are they?"</em> etc. All of these questions boil down to extracting an interconnection structure ( a graph ) of these entities and running graph algorithms on top of it. Doing this using GraphGen in <code>python</code> is <em>effortless</em>. To extract a graph like this and for instance run the <em>PageRank</em> algorithm on top of it one would simply need to write the following query:</p>
 
 <div class="highlight highlight-source-python"><pre><span class="pl-c"># An Edge exists between two author nodes if they've published together</span>
 datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"""</span></span>
@@ -51,6 +51,30 @@ datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds"
 <p>That's it!</p>
 
 <h2>
+<a id="installing-graphgenpy" class="anchor" href="#installing-graphgenpy" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing <code>graphgenpy</code>
+</h2>
+
+<p>To install <code>graphgenpy</code> onto your system, simply download and uncompress the <code>graphgen-pkg</code>.</p>
+
+<p>If you're using a virtual environment (<code>virtualenv</code>) -- which we highly recommend -- then you can simply</p>
+
+<div class="highlight highlight-source-shell"><pre>python setup.py install</pre></div>
+
+<p>If you'd like to install <code>graphgenpy</code> onto your system you need to</p>
+
+<div class="highlight highlight-source-shell"><pre>sudo python setup.py install</pre></div>
+
+<p>In order to try out <code>graphgenpy</code> in your local workspace without having to install it simply first install the requirements using <code>pip</code></p>
+
+<div class="highlight highlight-source-shell"><pre>pip install -r requirements.txt</pre></div>
+
+<p>and then export your <code>PYTHONPATH</code> to include the <code>graphgenpy</code> folder in your local workspace</p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">export</span> PYTHONPATH=<span class="pl-smi">$PYTHONPATH</span>:{full path of downloaded graphgenpy folder}</pre></div>
+
+<p>After that you can immediately import <code>graphgenpy</code> to extract and serialize your graphs onto disk and use them as you please.</p>
+
+<h2>
 <a id="this-is-cool-but-is-it-really-necessary" class="anchor" href="#this-is-cool-but-is-it-really-necessary" aria-hidden="true"><span class="octicon octicon-link"></span></a>This is cool, but is it really necessary?</h2>
 
 <p>Graph analytics and graph algorithms have proven their worth time and again, having provided substantial value to various different domains like social networks, communication networks, finance, health, and many others. However if the data stored for a particular application is not geared towards some network-specific task or the application itself is not network-centric, users will logically not choose to store their data in a native graph store or in a graph format separating out Nodes and Edges. These users would likely use a conventional, mature and often more reliable relational database. Nevertheless these users may still want to apply these graph analyses onto their data in order to power their application, perhaps though building a machine learning model or just trying to figure out the inner-workings of their company by exploring their inner e-mail network etc. GraphGen is therefore built towards enabling users who have gone with the latter choice to <em>efficiently</em> conduct their desired in-memory graph analyses on the data stored in their normalized relational databases without the need to manually go through time and money consuming ETL processes with often sub-optimal results.</p>
@@ -61,14 +85,6 @@ datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds"
 <a id="using-graphgen-with-python" class="anchor" href="#using-graphgen-with-python" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using GraphGen with Python</h2>
 
 <p>The easiest way to try out GraphGen is probably in Python through <code>graphgenpy</code>; a Python wrapper library for executing graph extraction queries in our custom DSL which is based on Datalog. The graphs that result from the extraction query are serialized to disk in a standard format and can then be <em>loaded</em> into other graph libraries like <a href="https://networkx.github.io/"><code>NetworkX</code></a> for further analysis.</p>
-
-<h3>
-<a id="installing-graphgenpy" class="anchor" href="#installing-graphgenpy" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing graphgenpy</h3>
-
-<p>To install <code>graphgenpy</code> onto your system, simply download the <code>graphgen-pkg</code>, and run:
-<code>python setup.py install</code> in the uncompressed directory.</p>
-
-<p>After that you can immediately use <code>graphgenpy</code> to extract and serialize your graphs onto disk and use them as you please.</p>
 
 <p><strong>Example:</strong></p>
 
