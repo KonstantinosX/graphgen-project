@@ -92,7 +92,7 @@ fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,GraphGenerator.G
 
 <p><strong>Example:</strong></p>
 
-<p>Say you already have the toy database <code>testgraphgen</code> (instructions on loading it <a href="#loading">here</a>) loaded into PostgreSQL. After that, <code>graphgenpy</code> is very simple to use.</p>
+<p>Say you already have the toy database <code>testgraphgen</code> (instructions on loading it <a href="#loading-a-toy-database">below</a>) loaded into PostgreSQL. After that, <code>graphgenpy</code> is very simple to use.</p>
 
 <div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> graphgenpy <span class="pl-k">import</span> GraphGenerator
 <span class="pl-k">import</span> networkx <span class="pl-k">as</span> nx
@@ -118,7 +118,7 @@ G <span class="pl-k">=</span> nx.read_gml(fname,<span class="pl-s"><span class="
 <span class="pl-k">print</span> <span class="pl-s"><span class="pl-pds">"</span>Done!<span class="pl-pds">"</span></span></pre></div>
 
 <h2>
-<a id="loading" class="anchor" href="#loading" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading</h2>
+<a id="loading-a-toy-database" class="anchor" href="#loading-a-toy-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading a toy database</h2>
 
 <p>Here is the script that loads a toy <a href="http://dblp.uni-trier.de/"><em>DBLP</em></a> database that will allow you to play around with <code>graphgenpy</code>.</p>
 
