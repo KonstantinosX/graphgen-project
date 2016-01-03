@@ -41,7 +41,7 @@ datalogQuery <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds"
 
 <div class="highlight highlight-source-python"><pre>gg <span class="pl-k">=</span> GraphGenerator(<span class="pl-s"><span class="pl-pds">"</span>localhost<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>5432<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>dbname<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>username<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>pwd<span class="pl-pds">"</span></span>)
 
-fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,GraphGenerator.GraphSON)
+fname <span class="pl-k">=</span> gg.generateGraph(datalogQuery,GraphGenerator.GML)
 <span class="pl-c"># ...</span></pre></div>
 
 <p>The user can then simply execute <code>pagerank</code> using their python package of choice, provided it is able to load the graph in from a file in one of the supported standard formats. Here we demonstrate using <code>NetowrkX</code>.</p>
