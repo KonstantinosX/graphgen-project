@@ -18,6 +18,6 @@ fname = gg.generateGraph(datalogQuery,"extracted_graph",GraphGenerator.GML)
 G = nx.read_gml(fname,'id')
 print "Graph Loaded into NetworkX! Running PageRank..."
 
-# Run any algorithm on the graph using NetowrkX
+# Run any algorithm on the graph using NetworkX
 print nx.pagerank(G)
 print "Done!"
