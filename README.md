@@ -2,6 +2,8 @@
 
 *A Python Wrapper for the GraphGen library*
 
+For more information and a great tutorial on the Python wrapper for GraphGen, please see [Efficient Graph Analytics on top of Relational Data](http://konstantinosx.github.io/graphgen-project/).
+
 ## Quickstart
 
 This quickstart will show you how to get started using the example code. First install the graphgenpy module as follows:
