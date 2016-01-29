@@ -64,7 +64,7 @@ long_description = "GraphGen is a blah blah graphs on RDBMSs"
 ## Define the configuration
 config = {
     "name": "graphgenpy",
-    "version": 0.5,
+    "version": 0.6,
     "description": "A wrapper for the GraphGen project",
     "long_description": long_description,
     "license": "MIT",
@@ -77,7 +77,7 @@ config = {
     "install_requires": requires,
     "zip_safe": False,
     "scripts": [],
-    "package_data": {'graphgenpy': ['lib/GraphGen-0.0.5-SNAPSHOT-jar-with-dependencies.jar']}
+    "package_data": {'graphgenpy': ['lib/GraphGen-0.0.6-SNAPSHOT-jar-with-dependencies.jar']}
     }
 
 ##########################################################################

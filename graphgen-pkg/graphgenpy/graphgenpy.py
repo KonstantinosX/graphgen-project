@@ -6,7 +6,7 @@
 
 import sys
 import os
-from . import utils
+import utils
 import os
 
 class GraphGenerator:
@@ -14,8 +14,8 @@ class GraphGenerator:
     GraphGenerator objects keep track of the
     database connection configuration details
     '''
-    GRAPHML = 'graphml'
     GML = 'gml'
+    GraphSON = 'json'
 
     def __init__(self, host, port,  dbname, username, password):
         self.dbname = dbname
@@ -33,11 +33,10 @@ class GraphGenerator:
         and serializes the result to disk
         '''
 
-        classpth = os.path.dirname(os.path.abspath(__file__)) + "/lib/GraphGen-0.0.5-SNAPSHOT-jar-with-dependencies.jar";
+        classpth = os.path.dirname(os.path.abspath(__file__)) + "/lib/GraphGen-0.0.6-SNAPSHOT-jar-with-dependencies.jar";
 
         # Directly call Java program for graph extraction using popen
-        (stdout, stderr) = utils.java(['com.umdb.graphgen.PyGenerateGraph', extractionQuery, serialization_format, filename,
-                                       self.host, self.port, self.dbname, self.username, self.password], classpath=classpth)
+        (stdout, stderr) = utils.java(['com.umdb.graphgen.PyGenerateGraph', extractionQuery, serialization_format, filename,self.host, self.port, self.dbname, self.username, self.password], classpath=classpth)
 
         if(stderr is None):
             print "Extraction was Successful! Graph was serialized in: " + os.path.dirname(os.path.realpath(__file__)) + '/' + filename + '.' + serialization_format

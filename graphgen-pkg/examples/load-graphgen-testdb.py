@@ -16,7 +16,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 ## Module Fixtures
 ##########################################################################
 
-USERNAME = None  #<< insert PostgreSQL username here
+USERNAME = None #<< insert PostgreSQL username here
 PASSWORD = None  #<< insert PostgreSQL password here
 
 # Change the database name if you already have a database called this.
