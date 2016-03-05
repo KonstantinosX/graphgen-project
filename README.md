@@ -1,4 +1,4 @@
-# Python GraphGen
+# GraphgenPy
 
 *A Python Wrapper for the GraphGen library*
 
