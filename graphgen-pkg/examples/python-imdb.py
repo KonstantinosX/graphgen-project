@@ -14,9 +14,8 @@ Edges(id1,id2):- cast_info(_,id1,movie_id,_,_,_,role),cast_info(_,id2,movie_id,_
 
 filename = 'coactorship'
 
-
 # Specify database connection details and instanciate GraphGen object
-gg = GraphGenerator("localhost","5432","imdb","kostasx","pass")
+gg = GraphGenerator("imdb","localhost","5432","kostasx","pass")
 
 # Evaluate graph extraction query and serialize the resulting graph to disk in a standard format
 fname = gg.generateGraph(datalogQuery,filename,GraphGenerator.GML)

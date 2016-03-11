@@ -7,7 +7,7 @@ Edges(ID1, ID2) :- AuthorPublication(ID1, PubID), AuthorPublication(ID2, PubID).
 """
 
 # Credentials for connecting to the database
-gg = GraphGenerator("localhost","5432","testgraphgen","kostasx","password") #All these must be strings!!
+gg = GraphGenerator("testgraphgen","localhost","5432","kostasx","password") #All these must be strings!!
 
 # Evaluate graph extraction query and serialize the resulting graph to disk in a standard format. Return the file's name in the FS.
 # Supported formats: GraphGenerator.GML or GraphGenerator.GraphSON

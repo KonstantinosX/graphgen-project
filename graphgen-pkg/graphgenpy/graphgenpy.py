@@ -17,7 +17,7 @@ class GraphGenerator:
     GML = 'gml'
     GraphSON = 'json'
 
-    def __init__(self, host, port,  dbname, username, password):
+    def __init__(self, dbname, host='', port='', username='', password=''):
         self.dbname = dbname
         self.port = port
         self.host = host

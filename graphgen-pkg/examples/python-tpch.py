@@ -8,10 +8,11 @@ Edges(ID1, ID2) :- Orders(orderId1, ID1),Lineitem(orderId1,part),Orders(orderId2
 """
 
 # Credentials for connecting to the database
-gg = GraphGenerator("localhost","5432","tpch","kostasx","password") #All these must be strings!!
+gg = GraphGenerator("tpch","localhost","5432","kostasx","password") #All these must be strings!!
 
 # Evaluate graph extraction query and serialize the resulting graph to disk in a standard format. Return the file's name in the FS.
-fname = gg.generateGraph(datalogQuery,"extracted_graph_tpch",GraphGenerator.GML)
+extracted_name = "extracted_graph_tpch"
+fname = gg.generateGraph(datalogQuery,extracted_name,GraphGenerator.GML)
 
 # Load graph into NetworkX
 G = nx.read_gml(fname,'id') #by default, the graph format will me gml
