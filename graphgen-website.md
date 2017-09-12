@@ -1,6 +1,10 @@
 
 We are excited to make an initial beta release of GraphGen; a system
-towards enabling graph analytics on top of relational datasets. GraphGen allows users to _declaratively_ specify graph extraction tasks over relational databases, visually explore the extracted graphs, and write and execute graph algorithms over them, either directly using our vertex-centric framework or using existing graph libraries like the widely used [NetworkX](https://networkx.github.io/) Python library. GraphGen was demonstrated at _VLDB 2015_; For a few more details see our [demo paper](http://www.vldb.org/pvldb/vol8/p2032-xirogiannopoulos.pdf) or view the [video](https://youtu.be/GDVBLv-oedQ) that explains the main functionality of the demo and core research challenges in GraphGen. We also have a followup paper in the works so stay tuned!
+towards enabling graph analytics on top of relational datasets. GraphGen allows users to _declaratively_ specify graph extraction tasks over relational databases, visually explore the extracted graphs, and write and execute graph algorithms over them, either directly using our vertex-centric framework or using existing graph libraries like the widely used [NetworkX](https://networkx.github.io/) Python library.
+
+- GraphGen was demonstrated at _VLDB 2015_; For a few more details see our [demo paper](http://www.vldb.org/pvldb/vol8/p2032-xirogiannopoulos.pdf) or view the [video](https://youtu.be/GDVBLv-oedQ) that explains the main functionality of the demo and core research challenges in GraphGen.
+- A full fledged [research paper](http://dl.acm.org/citation.cfm?doid=3035918.3035949) discussing GraphGen was recently published at _SIGMOD 2017_.
+- I also presented GraphGen at _PyData DC 2016_; My [talk](https://www.youtube.com/watch?v=3pAfRiGmk9o) is uploaded to YouTube.
 
 GraphGen currently only supports [PostgreSQL](http://www.postgresql.org/) as the backend relational database.
 
